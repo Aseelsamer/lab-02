@@ -5,10 +5,14 @@ section{
     border: 1px solid black;
     margin: 10px;
     text-align: center;
-    float: left;
+    /* float: left; */
+    /* flex-grow: 1; */
 }
 
-
+main{
+    display: flex;
+    flex-wrap: wrap;
+}
 
 footer{
     clear: both;

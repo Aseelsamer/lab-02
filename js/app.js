@@ -1,73 +1,139 @@
 'use strict';
-let imagesArray = [];
-function Image(url,title,description,keyword,horns){
-  this.url=url;
-  this.title=title;
-  this.description=description;
-  this.keyword=keyword;
-  this.horns=horns;
-  imagesArray.push(this);
+//Array of Photo objects
+let allPhotos = [];
+let optionsArr = ['narwhal', 'narwhal', 'triceratops', 'rhino', 'mouflon', 'lizard', 'dragon', 'unicorn', 'markhor', 'chameleon', 'narwhal', 'narwhal', 'triceratops', 'rhino', 'mouflon', 'lizard', 'dragon', 'unicorn', 'markhor', 'chameleon'];
+//Constructor
+function Photo(photoObj) {
+  this.image_url = photoObj.image_url;
+  this.title = photoObj.title;
+  this.description = photoObj.description;
+  this.keyword = photoObj.keyword;
+  this.horns = photoObj.horns;
+  allPhotos.push(this);
+}
+//Prototype to render the images and their title and description
+Photo.prototype.render = function () {
+  // let templete = $('#photo-template').clone();
+  // templete.find('h2').text(this.title);
+  // templete.find('img').attr('src', this.image_url);
+  // templete.find('p').text(this.description);
+  // templete.remove('photo-template');
+
+  //get template from html
+  let template =$('#templateMain').html();
+  let sectionMain= Mustache.render(template,this);
+  $('main').append(sectionMain);
+  // console.log(template);
+
+};
+//Array to store the selected photos from select
+var selectedPhotosArr = [];
+$('#page1').click(()=>{
+  $('select').html('');
+  allPhotos=[];
+  selectedPhotosArr=[];
+  $('select').append('<option value="default">Filter by Keyword</option>');
+  $('section').remove();
+
+  //To get the data from the JSON file
+  $.ajax('./data/page-1.json')
+    .then(data => {
+      console.log(data); // array of objects
+      data.forEach((value) => {
+      //Create a new object of type Photo
+        let newPhoto = new Photo(value);
+        newPhoto.render();
+        //Check if the selected photo is in the array or not
+        if (!selectedPhotosArr.includes(value.keyword)) {
+          selectedPhotosArr.push(value.keyword);
+        }
+      });
+      selectPhoto();
+    });
+});
+
+$('#page2').click(()=>{
+  $('select').html('');
+  allPhotos=[];
+  selectedPhotosArr=[];
+  $('select').append('<option value="default">Filter by Keyword</option>');
+  $('section').remove();
+
+  //To get the data from the JSON file
+  $.ajax('./data/page-2.json')
+    .then(data => {
+      console.log(data); // array of objects
+      data.forEach((value) => {
+      //Create a new object of type Photo
+        let newPhoto = new Photo(value);
+        newPhoto.render();
+        //Check if the selected photo is in the array or not
+        if (!selectedPhotosArr.includes(value.keyword)) {
+          selectedPhotosArr.push(value.keyword);
+        }
+      });
+      selectPhoto();
+    });
+});
+
+$('#sortHorns').click(()=>{
+  $('main').html('');
+  sotrHorns();
+  allPhotos.forEach(val=>{
+    val.render();
+  });
+});
+
+function sotrHorns(){
+  allPhotos.sort((a,b)=>{
+    if(a.horns > b.horns){
+      return 1;
+    }else if (a.horns<b.horns){
+      return -1;
+    }else {return 0;}
+  });
 }
 
-$.ajax('./data/page-1.json')
-  .then(data=>{
-    // console.log(data);
-    data.forEach((val)=>{
-      let image= new Image(val.image_url,val.title,val.description,val.keyword,val.horns);
-      //   console.log(image);
-      image.render();
-
-    });
-    $('#photo-template').first().remove();
-    renderSelect();
-  });
-
-
-Image.prototype.render = function(){
-  let imageTemplate= $('#photo-template').first().clone();
-  imageTemplate.attr('id',null);
-  imageTemplate.find('h2').text(this.title);
-
-  imageTemplate.find('img').attr('src',this.url);
-
-  imageTemplate.find('p').text(this.description);
-  $('main').append(imageTemplate);
-
-  console.log(imageTemplate.html());
-};
-
-let select = $('select');
-
-
-const renderSelect =()=>{
-  let arr=[];
-  imagesArray.forEach(element => {
-    if( ! arr.includes(element.keyword) ){
-      arr.push(element.keyword);
-      select.append(`<option> ${element.keyword} </option> `);
-
-    }
-  });
-  console.log(imagesArray, ' \n after filtering \n ' , arr);
-};
-
-select.on('change', function(){
-  let keyword = this.value;
-
+$('#sortTitle').click(()=>{
   $('main').html('');
-  imagesArray.forEach(element => {
-
-    if(element.keyword === keyword){
-      let image = $(`
-           <section>
-           <h2>${element.title}</h2>
-           <img src=${element.url} alt="">
-           <p>${element.description}</p>
-         </section>`) ;
-      $('main').append(image);
-
-    }
+  sortTitle();
+  allPhotos.forEach(val=>{
+    val.render();
   });
+});
+
+function sortTitle(){
+  allPhotos.sort((a,b)=>{
+    if(a.title.toUpperCase() > b.title.toUpperCase()){
+      return 1;
+    }else if (a.title.toLowerCase() < b.title.toLowerCase()){
+      return -1;
+    }else {return 0;}
+  });
+}
 
 
+
+
+//Function to add options to the 'select' element from the selectedPhotosArr array
+function selectPhoto() {
+  selectedPhotosArr.forEach(element => {
+    let option = $(`<option value="${element}"> ${element}</option>`);
+    console.log(option);
+    $('select').append(option);
+  });
+}
+$('select').click(function () {
+  let selected = $(this).val();
+  //As long as the value of the option selected is not default
+  if (selected !== 'default') {
+    let container = $('#photo-template');
+    $('main').empty();
+    $('main').append(container);
+    allPhotos.forEach(function (value) {
+      if (value.keyword === selected) {
+        value.render();
+      }
+    });
+  }
 });
